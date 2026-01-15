@@ -56,10 +56,6 @@ const Index = () => {
                 viewAllLink={section.config.cta_link}
               />
             );
-
-          case "trust":
-            return <TrustBanner key={section.id} />;
-
           default:
             return null;
         }
