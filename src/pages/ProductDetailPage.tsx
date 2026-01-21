@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Minus, Plus, Check, Truck, Shield, MapPin } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 
 const ProductDetailPage = () => {
@@ -79,6 +80,7 @@ const handleAddToCart = () => {
       }
     }
 
+
     addToCart({
       productId: product.id,
       name: product.name,
@@ -131,7 +133,10 @@ const handleAddToCart = () => {
 
 
 
-
+  const discountPercent =
+  isOnSale
+    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
+    : 0;
 
   /* ---------- Render ---------- */
 
@@ -211,6 +216,11 @@ const handleAddToCart = () => {
                   ₹{(product.price / 100).toLocaleString()}
                 </span>
               )}
+                        {isOnSale && (
+            <Badge variant="destructive" className="text-xs font-medium">
+              {discountPercent}% OFF
+            </Badge>
+          )}
             </div>
 
             {/* Description */}

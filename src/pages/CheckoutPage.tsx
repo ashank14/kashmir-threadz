@@ -10,16 +10,25 @@ import { Label } from "@/components/ui/label";
 import { Check, CreditCard, Smartphone, Banknote, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { z } from "zod";
 
-type Step = "address" | "payment" | "confirmation";
-type PaymentMethod = "upi" | "card" | "cod";
+
 
 const CheckoutPage = () => {
+  const checkoutSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  phone: z
+    .string()
+    .regex(/^[6-9]\d{9}$/, "Enter a valid Indian phone number"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  city: z.string().min(2, "City is required"),
+  pincode: z
+    .string()
+    .regex(/^\d{6}$/, "PIN code must be 6 digits"),
+});
   const { items, totalPrice, clearCart } = useCart();
   const { isAuthenticated, user, setShowLoginModal } = useAuth();
 
-  const [currentStep, setCurrentStep] = useState<Step>("address");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [address, setAddress] = useState({
@@ -31,32 +40,32 @@ const CheckoutPage = () => {
     pincode: "",
   });
 
-  const finalTotal = totalPrice >= 5000 ? totalPrice : totalPrice + 200;
+  const finalTotal = totalPrice >= 5000 ? totalPrice : totalPrice + 0;
 
   /* ---------- Guards ---------- */
 
-  if (!isAuthenticated) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-16 text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-            <LogIn className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h1 className="font-serif text-2xl font-semibold mb-4">
-            Login to Continue
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            Please login with your phone number to proceed.
-          </p>
-          <Button onClick={() => setShowLoginModal(true)} size="lg">
-            Login with Phone
-          </Button>
-        </div>
-      </Layout>
-    );
-  }
+//  if (!isAuthenticated) {
+//    return (
+//      <Layout>
+//        <div className="container mx-auto px-4 py-16 text-center max-w-md">
+//          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
+//            <LogIn className="h-8 w-8 text-muted-foreground" />
+//          </div>
+//          <h1 className="font-serif text-2xl font-semibold mb-4">
+//            Login to Continue
+//          </h1>
+//          <p className="text-muted-foreground mb-6">
+//            Please login with your phone number to proceed.
+//          </p>
+//          <Button onClick={() => setShowLoginModal(true)} size="lg">
+//            Login with Phone
+//         </Button>
+//       </div>
+//      </Layout>
+//    );
+//  }
 
-  if (items.length === 0 && currentStep !== "confirmation") {
+  if (items.length === 0) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
@@ -76,81 +85,60 @@ const CheckoutPage = () => {
   const handleAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !address.name ||
-      !address.phone ||
-      !address.address ||
-      !address.city ||
-      !address.pincode
-    ) {
-      toast.error("Please fill all required fields");
+    const result = checkoutSchema.safeParse(address);
+
+    if (!result.success) {
+      toast.error(result.error.issues[0].message);
       return;
     }
 
-    try {
-      // Save name to public.users
-      await api.post("api/user/update-name", {
-        userId: user.id,
-        fullName: address.name,
-      });
-
-      setCurrentStep("payment");
-    } catch {
-      toast.error("Failed to save user details");
-    }
+    // Valid → continue
+    await handlePayment();
   };
+
+
 
   /* ---------- Payment ---------- */
 
-  const handlePayment = async () => {
-    try {
-      setIsProcessing(true);
+const handlePayment = async () => {
+  try {
+    setIsProcessing(true);
 
-      const orderId = crypto.randomUUID();
+    // 1️⃣ Create pending order in backend
+    const { data } = await api.post("https://kashmir-threadz-backend-production.up.railway.app/api/paytm/create-order", {
+      userId: user?.id || "7f3c0c8e-0b7a-4d59-9c26-2fb0b6b0c9c1",
+      address,
+      items,
+      amount: finalTotal,
+    });
 
-      // 1️⃣ Create order + order_items
-      await api.post("/api/orders/create", {
-        orderId,
-        items,
-        totalAmount: finalTotal,
-        address,
-        paymentMethod,
-      });
+    const config = {
+      root: "",
+      flow: "DEFAULT",
+      data: {
+        orderId: data.orderId,    // Paytm orderId
+        token: data.paytmToken,   // TXN_TOKEN
+        tokenType: "TXN_TOKEN",
+        amount: data.amount,
+      },
+      handler: {
+        notifyMerchant(eventName, eventData) {
+          console.log("Event:", eventName, eventData);
+        },
+      },
+    };
 
-      // 2️⃣ COD FLOW
-      if (paymentMethod === "cod") {
-        clearCart();
-        setCurrentStep("confirmation");
-        toast.success("Order placed successfully (COD)");
-        return;
-      }
+    await window.Paytm.CheckoutJS.init(config);
+    window.Paytm.CheckoutJS.invoke();
 
-      // 3️⃣ ONLINE PAYMENT (Paytm)
-      const { data } = await api.post("/api/paytm/create-order", {
-        orderId,
-        amount: finalTotal,
-        userId: user.id,
-      });
+  } catch (err) {
+    console.error(err);
+    toast.error("Payment failed. Please try again.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "https://securegw-stage.paytm.in/order/process";
-
-      form.innerHTML = `
-        <input type="hidden" name="mid" value="${data.mid}" />
-        <input type="hidden" name="orderId" value="${data.orderId}" />
-        <input type="hidden" name="txnToken" value="${data.txnToken}" />
-      `;
-
-      document.body.appendChild(form);
-      form.submit();
-    } catch (err) {
-      console.error(err);
-      toast.error("Payment failed. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   /* ---------- UI ---------- */
 
@@ -158,7 +146,7 @@ const CheckoutPage = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* ADDRESS */}
-        {currentStep === "address" && (
+        {(
           <div className="bg-card border rounded-sm p-6">
             <h2 className="font-serif text-xl font-semibold mb-6">
               Delivery Address
@@ -213,70 +201,6 @@ const CheckoutPage = () => {
           </div>
         )}
 
-        {/* PAYMENT */}
-        {currentStep === "payment" && (
-          <div className="bg-card border rounded-sm p-6">
-            <h2 className="font-serif text-xl font-semibold mb-6">
-              Payment Method
-            </h2>
-
-            {[
-              { id: "upi", label: "UPI", icon: Smartphone },
-              { id: "card", label: "Card", icon: CreditCard },
-              { id: "cod", label: "Cash on Delivery", icon: Banknote },
-            ].map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setPaymentMethod(m.id as PaymentMethod)}
-                className={`w-full flex items-center gap-3 p-4 border rounded-sm mb-3 ${
-                  paymentMethod === m.id
-                    ? "border-primary bg-primary/5"
-                    : ""
-                }`}
-              >
-                <m.icon className="h-5 w-5" />
-                {m.label}
-                {paymentMethod === m.id && (
-                  <Check className="ml-auto text-primary" />
-                )}
-              </button>
-            ))}
-
-            <div className="border-t mt-6 pt-4">
-              <div className="flex justify-between text-sm">
-                <span>Total</span>
-                <span>{formatPrice(finalTotal)}</span>
-              </div>
-            </div>
-
-            <Button
-              onClick={handlePayment}
-              disabled={isProcessing}
-              className="w-full mt-6"
-              size="lg"
-            >
-              {isProcessing
-                ? "Processing..."
-                : `Pay ${formatPrice(finalTotal)}`}
-            </Button>
-          </div>
-        )}
-
-        {/* CONFIRMATION */}
-        {currentStep === "confirmation" && (
-          <div className="bg-card border rounded-sm p-8 text-center">
-            <Check className="h-10 w-10 text-primary mx-auto mb-4" />
-            <h2 className="font-serif text-2xl font-semibold mb-2">
-              Order Confirmed
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Thank you for shopping with us.
-            </p>
-            <Button asChild>
-              <Link to="/orders">View Orders</Link>
-            </Button>
-          </div>
-        )}
       </div>
     </Layout>
   );

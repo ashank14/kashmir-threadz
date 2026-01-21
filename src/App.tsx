@@ -16,6 +16,14 @@ import NotFound from "./pages/NotFound";
 import { CategoriesProvider } from "@/context/CategoriesContext";
 import ProductListingPage from "./pages/ProductListingPage";
 
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
+import About from "./pages/About";
+import Refund from "./pages/Refund";
+import Shipping from "./pages/Shipping";
+import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +46,15 @@ const App = () => (
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="*" element={<NotFound />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-failed" element={<PaymentFailed />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/refund" element={<Refund />} />
+              <Route path="/shipping" element={<Shipping />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
             </Routes>
           </BrowserRouter>
         </CartProvider>

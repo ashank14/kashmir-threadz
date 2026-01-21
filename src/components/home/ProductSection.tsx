@@ -4,6 +4,12 @@ import { ArrowRight } from "lucide-react";
 import ProductCard from "@/components/product/ProductCard";
 import { supabase } from "@/lib/supabase";
 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+
 interface ProductSectionProps {
   title: string;
   subtitle?: string;
@@ -17,7 +23,7 @@ const ProductSection = ({
   title,
   subtitle,
   source,
-  limit = 4,
+  limit = 8,
   viewAllLink,
   viewAllText = "View All",
 }: ProductSectionProps) => {
@@ -43,8 +49,8 @@ const ProductSection = ({
 
       const { data, error } = await query.limit(limit);
 
-      if (!error) {
-        setProducts(data || []);
+      if (!error && data) {
+        setProducts(data);
       }
 
       setLoading(false);
@@ -58,9 +64,10 @@ const ProductSection = ({
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
+        {/* Header */}
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="font-serif text-2xl md:text-3xl font-semibold text-foreground mb-1">
+            <h2 className="font-serif text-2xl md:text-3xl font-semibold mb-1">
               {title}
             </h2>
             {subtitle && (
@@ -71,7 +78,7 @@ const ProductSection = ({
           {viewAllLink && (
             <Link
               to={viewAllLink}
-              className="hidden sm:flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
+              className="hidden sm:flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors"
             >
               {viewAllText}
               <ArrowRight className="h-4 w-4" />
@@ -79,17 +86,31 @@ const ProductSection = ({
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Carousel */}
+        <Swiper
+          modules={[Navigation]}
+          navigation
+          spaceBetween={16}
+          breakpoints={{
+            0: { slidesPerView: 1.2 },
+            640: { slidesPerView: 2.2 },
+            768: { slidesPerView: 3 },
+            1024: { slidesPerView: 4 },
+          }}
+        >
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <SwiperSlide key={product.id}>
+              <ProductCard product={product} />
+            </SwiperSlide>
           ))}
-        </div>
+        </Swiper>
 
+        {/* Mobile View All */}
         {viewAllLink && (
           <div className="mt-8 text-center sm:hidden">
             <Link
               to={viewAllLink}
-              className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors"
             >
               {viewAllText}
               <ArrowRight className="h-4 w-4" />

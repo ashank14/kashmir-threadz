@@ -14,6 +14,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const isOutOfStock = product.stock_quantity <= 0;
   const isOnSale = product.on_sale && product.sale_price;
+  const discountPercent =
+  isOnSale
+    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
+    : 0;
+
 
   return (
     <Link
@@ -30,10 +35,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {isOnSale && (
-            <Badge variant="secondary" className="text-xs font-medium">
-              Sale
+            <Badge variant="destructive" className="text-xs font-medium">
+              {discountPercent}% OFF
             </Badge>
           )}
+
         </div>
 
         {/* Out of stock overlay */}

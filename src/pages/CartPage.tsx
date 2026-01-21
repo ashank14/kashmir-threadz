@@ -144,7 +144,7 @@ const CartPage = () => {
               <div className="flex justify-between text-sm mb-4">
                 <span>Shipping</span>
                 <span>
-                  {totalPrice >= 500000 ? "Free" : "₹200"}
+                  {totalPrice >= 500000 ? "Free" : "₹0"}
                 </span>
               </div>
 
@@ -154,7 +154,7 @@ const CartPage = () => {
                   ₹{(
                     (totalPrice >= 500000
                       ? totalPrice
-                      : totalPrice + 20000) / 100
+                      : totalPrice + 0) / 100
                   ).toLocaleString()}
                 </span>
               </div>

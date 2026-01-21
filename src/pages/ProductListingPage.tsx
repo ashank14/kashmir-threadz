@@ -18,7 +18,8 @@ type Category = {
 export default function ProductListingPage() {
   const { slug } = useParams<{ slug?: string }>();
   const [searchParams] = useSearchParams();
-  const filter = searchParams.get("filter"); // featured | new | sale
+  const filter = searchParams.get("filter"); // featured | new | sal
+
 
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -33,11 +34,14 @@ export default function ProductListingPage() {
   }, [slug, filter]);
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
+  const tagsParam = searchParams.get("tags");
+  const selectedTags = tagsParam ? tagsParam.split(",") : [];
+
+  async function fetchData() {
+    setLoading(true);
 
       try {
-        // 1️⃣ Fetch category (if slug exists)
+        // 1️⃣ Fetch category
         if (slug) {
           const { data, error } = await supabase
             .from("categories")
@@ -66,23 +70,24 @@ export default function ProductListingPage() {
           query = query.eq("categories.slug", slug);
         }
 
-        // product filters
+        // built-in filters
         if (filter === "featured") {
           query = query.eq("is_featured", true);
         }
 
         if (filter === "sale") {
-          query = query.eq("on_sale", true); // or discount > 0
+          query = query.eq("on_sale", true);
         }
 
-        if (filter === "new") {
-          query = query.order("created_at", { ascending: false });
-        } else {
-          query = query.order("created_at", { ascending: false });
+        // 🔥 TAGS FILTER (NEW)
+        if (selectedTags.length > 0) {
+          query = query.contains("tags", selectedTags);
         }
+
+        // ordering
+        query = query.order("created_at", { ascending: false });
 
         const { data, error, count } = await query;
-
         if (error) throw error;
 
         setProducts(data ?? []);
@@ -95,9 +100,8 @@ export default function ProductListingPage() {
       }
     }
 
-    fetchData();
-  }, [slug, filter, currentPage]);
-
+  fetchData();
+}, [slug, filter, currentPage]);
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);

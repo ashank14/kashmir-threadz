@@ -49,23 +49,29 @@ useEffect(() => {
 
   const fetchOrders = async () => {
     setLoading(true);
+const { data, error } = await supabase
+  .from("orders")
+  .select(`
+    id,
+    public_order_id,
+    status,
+    total_amount,
+    created_at,
+    order_items:order_items!order_items_order_id_fkey (
+      id,
+      product_id,
+      quantity,
+      price_at_purchase,
+      size,
+      product:products!order_items_product_id_fkey (
+        name,
+        image_path
+      )
+    )
+  `)
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
 
-    const { data, error } = await supabase
-      .from("orders")
-      .select(`
-        id,
-        status,
-        total_amount,
-        created_at,
-        order_items (
-          id,
-          quantity,
-          price_at_purchase,
-          size,
-          products ( name )
-        )
-      `)
-      .order("created_at", { ascending: false });
 
     if (!error && data) {
       setOrders(data);
@@ -164,20 +170,28 @@ useEffect(() => {
                 {/* Items */}
                 <div className="border-t border-border pt-4 space-y-2">
                   {order.order_items.map((item) => (
-                    <div
+                    <Link
                       key={item.id}
-                      className="flex justify-between text-sm"
+                      to={`/product/${item.product_id}`}
+                      className="flex justify-between gap-4 text-sm hover:bg-muted/50 p-2 rounded-sm transition"
                     >
+                      <img
+                        src={item.product?.image_path}
+                        alt={item.product?.name}
+                        className="w-16 h-16 rounded object-cover shrink-0"
+                      />
+
                       <div>
-                        <p className="font-medium">
-                          {item.products?.name}
+                        <p className="font-medium hover:underline">
+                          {item.product?.name}
                         </p>
                         <p className="text-muted-foreground">
                           Qty: {item.quantity}
                           {item.size && ` • Size: ${item.size}`}
                         </p>
                       </div>
-                    </div>
+                    </Link>
+
                   ))}
                 </div>
 
