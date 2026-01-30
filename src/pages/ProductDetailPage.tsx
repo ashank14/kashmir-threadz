@@ -208,12 +208,12 @@ const handleAddToCart = () => {
             {/* Price */}
             <div className="flex items-center gap-3 mb-6">
               <span className="text-2xl font-semibold text-foreground">
-                ₹{(displayPrice / 100).toLocaleString()}
+                ₹{(displayPrice).toLocaleString()}
               </span>
 
               {isOnSale && (
                 <span className="text-lg text-muted-foreground line-through">
-                  ₹{(product.price / 100).toLocaleString()}
+                  ₹{(product.price ).toLocaleString()}
                 </span>
               )}
                         {isOnSale && (
