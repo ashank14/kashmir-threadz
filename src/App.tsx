@@ -49,7 +49,7 @@ const App = () => (
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-failed" element={<PaymentFailed />} />
               <Route path="/about" element={<About />} />
-              <Route path="/refund" element={<Refund />} />
+              <Route path="/refund-policy" element={<Refund />} />
               <Route path="/shipping" element={<Shipping />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/contact" element={<Contact />} />
