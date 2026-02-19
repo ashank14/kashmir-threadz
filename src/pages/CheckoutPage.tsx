@@ -44,26 +44,26 @@ const CheckoutPage = () => {
 
   /* ---------- Guards ---------- */
 
-//  if (!isAuthenticated) {
-//    return (
-//      <Layout>
-//        <div className="container mx-auto px-4 py-16 text-center max-w-md">
-//          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-//            <LogIn className="h-8 w-8 text-muted-foreground" />
-//          </div>
-//          <h1 className="font-serif text-2xl font-semibold mb-4">
-//            Login to Continue
-//          </h1>
-//          <p className="text-muted-foreground mb-6">
-//            Please login with your phone number to proceed.
-//          </p>
-//          <Button onClick={() => setShowLoginModal(true)} size="lg">
-//            Login with Phone
-//         </Button>
-//       </div>
-//      </Layout>
-//    );
-//  }
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 text-center max-w-md">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
+            <LogIn className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h1 className="font-serif text-2xl font-semibold mb-4">
+            Login to Continue
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            Please login with your phone number to proceed.
+          </p>
+          <Button onClick={() => setShowLoginModal(true)} size="lg">
+            Login with Phone
+         </Button>
+      </div>
+      </Layout>
+    );
+  }
 
   if (items.length === 0) {
     return (

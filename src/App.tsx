@@ -16,7 +16,6 @@ import NotFound from "./pages/NotFound";
 import { CategoriesProvider } from "@/context/CategoriesContext";
 import ProductListingPage from "./pages/ProductListingPage";
 
-import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import About from "./pages/About";
 import Refund from "./pages/Refund";
@@ -46,7 +45,6 @@ const App = () => (
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="*" element={<NotFound />} />
-              <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-failed" element={<PaymentFailed />} />
               <Route path="/about" element={<About />} />
               <Route path="/refund-policy" element={<Refund />} />
