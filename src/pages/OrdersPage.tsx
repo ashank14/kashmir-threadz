@@ -75,6 +75,7 @@ const { data, error } = await supabase
     )
   `)
   .eq("user_id", user.id)
+  .neq("status", "PENDING")   // ⬅ hide all pending orders
   .order("created_at", { ascending: false });
 
 
