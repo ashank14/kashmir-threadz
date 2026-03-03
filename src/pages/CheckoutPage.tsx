@@ -105,7 +105,7 @@ const handlePayment = async () => {
     setIsProcessing(true);
 
     // 1️⃣ Create pending order in backend
-    const { data } = await api.post("https://kashmir-threadz-backend.onrender.com/api/paytm/create-order", {
+    const { data } = await api.post("https://kashmir-threadz-backend-production.up.railway.app/api/paytm/create-order", {
       userId: user?.id || "7f3c0c8e-0b7a-4d59-9c26-2fb0b6b0c9c1",
       address,
       items,
