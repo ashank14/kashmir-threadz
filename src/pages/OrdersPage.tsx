@@ -24,17 +24,22 @@ const getStatusIcon = (status: string) => {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
+    case "PENDING":
+      return "Payment Pending";
+    case "PAID":
+      return "Paid";
     case "SHIPPED":
       return "Shipped";
-    case "PAID":
-      return "Processing";
+    case "DELIVERED":
+      return "Delivered";
     case "CANCELLED":
       return "Cancelled";
+    case "REFUNDED":
+      return "Refunded";
     default:
-      return "Delivered";
+      return status;
   }
 };
-
 
 /* ---------- Page ---------- */
 
